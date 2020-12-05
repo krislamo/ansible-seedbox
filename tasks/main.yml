@@ -1,0 +1,33 @@
+- name: Install Transmission
+  apt:
+    name: transmission-daemon
+    install_recommends: true
+    state: present
+
+- name: Check Transmission settings
+  template:
+    src: settings.json.j2
+    dest: /etc/transmission-daemon/settings.json
+  register: settings_file
+  check_mode: true
+
+- name: Stop Transmission Daemon
+  service:
+    name: transmission-daemon
+    state: stopped
+  when: settings_file.changed
+
+- name: Install Transmission settings
+  template:
+    src: settings.json.j2
+    dest: /etc/transmission-daemon/settings.json
+    owner: debian-transmission
+    group: debian-transmission
+    backup: true
+  when: settings_file.changed
+
+- name: Start Transmission Daemon
+  service:
+    name: transmission-daemon
+    state: started
+  when: settings_file.changed
